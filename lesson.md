@@ -6,13 +6,13 @@ This lesson introduces students to modern web application development using REST
 ---
 
 ## Lesson Objectives
-By the end of this lesson, students will be able to:
-- Understand API-centric architecture and apply REST principles and design guidelines
-- Set up and configure a Spring Boot project using Spring Initializr and Maven
-- Create RESTful endpoints with query parameters and path variables
-- Implement the Model-View-Controller (MVC) pattern by separating concerns
-- Apply Dependency Injection principles using Spring annotations
 
+By the end of this lesson, students will be able to:
+
+1. **Set up** and run a Spring Boot project using Spring Initializr and Maven
+2. **Create** RESTful endpoints with query parameters and path variables following REST design guidelines
+3. **Apply** the MVC pattern by separating concerns into a dedicated Controller class
+4. **Implement** Dependency Injection using `@Component` and `@Autowired`
 ---
 
 ## Part 1: API-Centric Approach
@@ -446,7 +446,7 @@ Test the route by accessing `localhost:8080/users/1`.
 
 ---
 
-# 👨‍💻 Activity
+# 👨‍💻 Activity (10 minutes)
 
 1. Create an endpoint `localhost:8080/products/` and returns the phrase "This is the product page".
 1. Create an endpoint `localhost:8080/products/{id}` and returns the phrase "You have requested for product with id: {id}". Replace `{id}` with the actual id.
@@ -614,7 +614,7 @@ This is how dependency injection works:
 
 ---
 
-# 👨‍💻 Activity
+# 👨‍💻 Activity (15 mins)
 
 Use what you have learned to create a new Spring Boot project titled `simple-crm`.
 
