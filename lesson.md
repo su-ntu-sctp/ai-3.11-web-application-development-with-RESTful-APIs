@@ -1,6 +1,6 @@
 # Lesson: Web Application Development with RESTful APIs
 
-## Lesson Overview
+## Lesson Overview :
 This lesson introduces students to modern web application development using RESTful APIs. Students will learn the fundamental principles of REST architecture, API design best practices, and how to build backend services that can be consumed by multiple client applications (web, mobile, desktop). Using Spring Boot as the implementation framework, students will understand the API-centric approach where frontend and backend are developed separately and communicate via HTTP. The lesson covers project setup, routing, request handling, dependency injection, and the Model-View-Controller (MVC) architectural pattern. By the end of this lesson, students will be able to build a functional RESTful API backend that follows industry best practices and can serve as the foundation for full-stack applications.
 
 ---
