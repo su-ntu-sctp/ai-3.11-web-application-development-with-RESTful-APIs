@@ -2,7 +2,7 @@
 
 ## Lesson Overview
 
-![Web Application Development with RESTful APIs](./assets/images/infographic-3.11-spring-boot-rest-api.png)
+![Web Application Development with RESTful-APIs](./assets/images/infographic-3.11-spring-boot-rest-api.png)
 
 ## Dependencies
 
