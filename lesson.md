@@ -331,14 +331,22 @@ You can check out your local Maven repository at `C:\Users\<username>\.m2\reposi
 ### Adding a Second Dependency
 
 Let's add a second dependency, the **[Spring Boot DevTools](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools)** library. This library provides additional development-time features such as automatic restart of the application when we update and save our code.
+
+> **Note:** Add `<optional>true</optional>` to the DevTools dependency. Without it, auto-restart may not work.
+
 ```xml
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-devtools</artifactId>
+  <optional>true</optional>
 </dependency>
 ```
 
-Try changing the code or the server port. You will notice that the application will restart automatically.
+> **Note (WSL Users):** For auto-restart to work in VS Code, ensure the following are enabled:
+> - `File → Auto Save` in VS Code
+> - `Java › Autobuild: Enabled` under `Ctrl + ,` settings
+>
+> If auto-restart still does not trigger, manually restart with `Ctrl+C` then `mvn spring-boot:run`.
 
 ---
 
@@ -409,6 +417,8 @@ Test the route by accessing `localhost:8080/greet?name=Tony`.
 The portion after the `?` is known as the **query string** or **query parameters**.
 
 It is used to pass data to the server. The query string is made up of key-value pairs. In this case, the key is `name` and the value is `Tony`.
+
+> **Note:** Query parameter values must have no spaces. If spaces are needed, use `%20` e.g. `localhost:8080/greet?name=Tony%20Stark`.
 
 We can add a default value by specifying the `defaultValue` attribute.
 ```java
