@@ -9,10 +9,12 @@ This lesson introduces students to modern web application development using REST
 
 By the end of this lesson, students will be able to:
 
-1. **Set up** and run a Spring Boot project using Spring Initializr and Maven
-2. **Create** RESTful endpoints with query parameters and path variables following REST design guidelines
-3. **Apply** the MVC pattern by separating concerns into a dedicated Controller class
-4. **Implement** Dependency Injection using `@Component` and `@Autowired`
+1. **Explain** the API-centric approach and the core principles of REST architecture
+2. **Set up** and run a Spring Boot project using Spring Initializr and Maven
+3. **Create** RESTful endpoints with query parameters and path variables following REST design guidelines
+4. **Apply** the MVC pattern by separating concerns into a dedicated Controller class
+5. **Implement** Dependency Injection using `@Component` and `@Autowired`
+
 ---
 
 ## Part 1: API-Centric Approach
@@ -103,9 +105,14 @@ We should use plural **nouns** instead of verbs in the endpoints. The HTTP metho
 ```
 GET www.example.com/api/users // ✅ Get all users
 POST www.example.com/api/users // ✅ Create a new user
-PUT www.example.com/api/users // ✅ Update a user
-DELETE www.example.com/api/users // ✅ Delete all users
+GET www.example.com/api/users/5 // ✅ Get the user with id 5
+PUT www.example.com/api/users/5 // ✅ Update the user with id 5
+DELETE www.example.com/api/users/5 // ✅ Delete the user with id 5
 ```
+
+Notice the pattern: the **collection** endpoint (`/api/users`) is used to get all users or create a new one. The **single resource** endpoint (`/api/users/5`) is used to read, update or delete one specific user.
+
+Update and delete always target a specific resource. We do not expose `DELETE /api/users`, because that would mean "delete every user" — not something a real API should allow on a collection URL.
 
 Do not use verbs in the endpoints.
 ```
@@ -180,14 +187,14 @@ We will see this in action later.
 
 ### Creation of Spring Project via Initializr
 
-Note: We will be using Spring Boot 3.3.5
+> **Note on versions:** We will use the **current stable release of Spring Boot offered by Spring Initializr** (4.x at the time of writing). Do not pin to an exact version number — Initializr updates its list regularly, and an older version may no longer be available in the dropdown. Spring Boot 4.x requires Java 21, which is the version we use in this module.
 
 First, let's install the [Spring Boot Extension Pack](https://marketplace.visualstudio.com/items?itemName=vmware.vscode-boot-dev-pack) in VS Code. Restart VS Code after installation.
 
 We can create a new Spring Boot Project using Spring Initializr. This can be done using the Spring Boot Extension Pack or by going to [Spring Initializr](https://start.spring.io/).
 
 1. Open your Command Palette (Ctrl/Cmd + Shift + P) and type in "Spring Initializr" and select "Create a Maven Project".
-1. Choose version `3.3.5`.
+1. Choose the latest stable version offered (do not choose a SNAPSHOT or milestone version).
 1. Choose Java as language.
 1. The `groupId` identifies your organization. Usually we use the reverse domain name of your organization e.g. `sg.edu.ntu`.
 1. The `artifactId` is the name of your application. The convention is use lowercase and hyphenate multiple words e.g. `spring-demo`.
@@ -208,18 +215,20 @@ spring-demo
 ├── src
 │   ├── main
 │   │   ├── java
-│   │   │   └── com
-│   │   │       └── example
-│   │   │           └── myspringbootproject
-│   │   │               └── MySpringbootProjectApplication.java
+│   │   │   └── sg
+│   │   │       └── edu
+│   │   │           └── ntu
+│   │   │               └── spring_demo
+│   │   │                   └── SpringDemoApplication.java
 │   │   └── resources
 │   │       └── application.properties
 │   └── test
 │       └── java
-│           └── com
-│               └── example
-│                   └── myspringbootproject
-│                       └── MySpringbootProjectApplicationTests.java
+│           └── sg
+│               └── edu
+│                   └── ntu
+│                       └── spring_demo
+│                           └── SpringDemoApplicationTests.java
 ├── target
 ├── mvnw
 ├── mvnw.cmd
@@ -239,24 +248,26 @@ spring-demo
 
 ### Running the Spring Boot Application
 
-Every application has an entry point. For Spring Boot, the entry point is the `main` method in the `MySpringbootProjectApplication.java` file (or whatever name you have given to the project).
+Every application has an entry point. For Spring Boot, the entry point is the `main` method in the `SpringDemoApplication.java` file (the file is named after your `artifactId`, so it will differ if you named your project something else).
 ```
-src/main/java/com/example/myspringbootproject/MySpringbootProjectApplication.java
+src/main/java/sg/edu/ntu/spring_demo/SpringDemoApplication.java
 ```
 
 Notice that the initial code is annotated with `@SpringBootApplication`. This instruments the class to be the entry point for the Spring Boot application.
 ```java
 @SpringBootApplication
-public class DemoSpringBootApplication {
+public class SpringDemoApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DemoSpringBootApplication.class, args);
+        SpringApplication.run(SpringDemoApplication.class, args);
     }
 
 }
 ```
 
 We can run the Spring Boot application using the `mvn` command in the terminal. If you look at the project folder, you will also see a `mvnw` file. This is a Maven wrapper that allows us to run Maven commands without having to install Maven on our computer. Both commands will work.
+
+> **Note:** Maven commands must be run from the folder that contains `pom.xml`. If you get "there is no POM in this directory", `cd` into your project folder first.
 
 To run the Spring Boot app:
 ```bash
@@ -280,6 +291,8 @@ We can specify the `clean` option to clean the target folder before compiling th
 mvn clean spring-boot:run
 ```
 
+> **Note:** While the application is running, that terminal is busy — anything you type into it will be ignored. To run another command, open a second terminal, or stop the app first with `Ctrl+C`.
+
 ### Dependencies
 
 Dependencies are external libraries that our application depends on. For example, if we want to use the Spring Web library, we need to add the dependency to our project.
@@ -288,19 +301,23 @@ We can search for dependencies in [Maven Central](https://mvnrepository.com/).
 
 Dependencies are specified in the `pom.xml` file. The `pom.xml` file is the Maven Project Object Model (POM) file. It is an XML file that contains information about the project and configuration details used by Maven to build the project.
 
-Let's install our first dependency, the **[Spring Boot Starter Web](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web)** library. If you copied the XML from Maven Central, just omit the `<version>` tag, so that it will follow the version specified in the `<parent>` tag.
+Let's install our first dependency, the **Spring Boot Starter WebMVC** library. If you copied the XML from Maven Central, just omit the `<version>` tag, so that it will follow the version specified in the `<parent>` tag.
 ```xml
   <dependency>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
+    <artifactId>spring-boot-starter-webmvc</artifactId>
   </dependency>
 ```
+
+> **Note on the starter name:** In Spring Boot 3.x and earlier, this starter was called `spring-boot-starter-web`. Spring Boot 4 renamed it to `spring-boot-starter-webmvc`, to distinguish Spring MVC from Spring WebFlux. The old name still resolves, but it is deprecated and will be removed in a future release. Most online tutorials and older Stack Overflow answers still show `spring-boot-starter-web` — if you see that, it is the same starter under its old name.
+
+> **Note — display name vs artifactId:** If you add this dependency using Spring Initializr instead of typing it by hand, the picker lists it as **"Spring Web"**. That is only the display name for the feature, and it has deliberately been kept unchanged for years. Look in your `pom.xml` afterwards and you will see the artifact it actually added is `spring-boot-starter-webmvc`. The same is true elsewhere: "Spring Data JPA" adds `spring-boot-starter-data-jpa`, "Spring Security" adds `spring-boot-starter-security`. The label in the picker never matches the Maven coordinate exactly — the `pom.xml` is the source of truth.
 
 > Sidenote: you can install an [extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml) for XML formatting in VS Code. This will help you to format the XML nicely.
 
 The `groupId` identifies the group of the dependency while the `artifactId` identifies the artifact (library) of the dependency.
 
-The `spring-boot-starter-web` dependency is a starter dependency that includes all the dependencies required to build a web application.
+The `spring-boot-starter-webmvc` dependency is a starter dependency that includes all the dependencies required to build a web application.
 
 By adding this dependency, we are embedding the Tomcat web server into our application.
 
@@ -338,9 +355,12 @@ Let's add a second dependency, the **[Spring Boot DevTools](https://mvnrepositor
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-devtools</artifactId>
+  <scope>runtime</scope>
   <optional>true</optional>
 </dependency>
 ```
+
+> **Note:** If you added DevTools through Spring Initializr, it writes both `<scope>runtime</scope>` and `<optional>true</optional>`, exactly as shown above. `runtime` means DevTools is not needed to compile your code, only to run it. `optional` stops DevTools being passed on to anything that later depends on your application — which matters because DevTools must never end up in a production build. Both lines are correct; you have not done anything wrong if you see them.
 
 > **Note (WSL Users):** For auto-restart to work in VS Code, ensure the following are enabled:
 > - `File → Auto Save` in VS Code
@@ -358,10 +378,10 @@ In our application class file, annotate it with `@RestController` to tell Spring
 ```java
 @SpringBootApplication
 @RestController
-public class DemoSpringBootApplication {
+public class SpringDemoApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DemoSpringBootApplication.class, args);
+        SpringApplication.run(SpringDemoApplication.class, args);
     }
 
 }
@@ -370,6 +390,8 @@ public class DemoSpringBootApplication {
 When you annotate a class with `@RestController`, it becomes the entry point for all web requests. This means that any object you return from this class will be serialized i.e., converted to JSON and returned to the client.
 
 Under the hood, Spring Boot uses the Jackson library to convert the object to JSON for us.
+
+> **Note:** We are putting routes in the main application class only to get started quickly. This is not how we would organise a real project — in Part 6 we will move them into a dedicated controller class.
 
 ### Basic Mapping
 
@@ -398,6 +420,8 @@ curl localhost:8080/hello
 
 It will be useful to try out the different methods to access the endpoints.
 
+> **Note:** A browser address bar can only send GET requests. To send POST, PUT or DELETE requests, you will need Postman, Thunder Client, YARC or `curl`.
+
 Open your browser and access the route at `localhost:8080/hello`.
 
 In the sidebar, open the Spring Boot dashboard and you can see that the endpoint `/hello` is listed.
@@ -419,6 +443,8 @@ The portion after the `?` is known as the **query string** or **query parameters
 It is used to pass data to the server. The query string is made up of key-value pairs. In this case, the key is `name` and the value is `Tony`.
 
 > **Note:** Query parameter values must have no spaces. If spaces are needed, use `%20` e.g. `localhost:8080/greet?name=Tony%20Stark`.
+
+> **Note:** `@RequestParam` is **required by default**. If you access `localhost:8080/greet` without the parameter, you will get a `400 Bad Request` rather than a null value. Use `defaultValue` (below) or `required = false` to make it optional.
 
 We can add a default value by specifying the `defaultValue` attribute.
 ```java
@@ -447,20 +473,26 @@ A **path variable** is a variable that is part of the route. For example, in the
 We can create a dynamic path by adding a path variable to the route.
 ```java
 @GetMapping("/users/{id}")
-public String getUser(@PathVariable int id) {
+public String getUserById(@PathVariable int id) {
   return "User ID: " + id;
 }
 ```
 
 Test the route by accessing `localhost:8080/users/1`.
 
+**Path variable or query parameter?** A path variable identifies *which* resource you want, and is mandatory (`/users/5`). A query parameter describes *how* you want it — filtering, sorting, searching, pagination — and is usually optional (`/users?page=5`).
+
 ---
 
 # 👨‍💻 Activity (10 minutes)
 
-1. Create an endpoint `localhost:8080/products/` and returns the phrase "This is the product page".
-1. Create an endpoint `localhost:8080/products/{id}` and returns the phrase "You have requested for product with id: {id}". Replace `{id}` with the actual id.
-1. Update the first endpoint to allow for a search term using query parameters e.g. `localhost:8080/products?search=apple`. Return the phrase "You have searched for {searchTerm}". Replace `{searchTerm}` with the actual search term.
+Add these endpoints to your existing application class.
+
+1. Create an endpoint `localhost:8080/products` that returns the phrase "This is the product page".
+1. Create an endpoint `localhost:8080/products/{id}` that returns the phrase "You have requested for product with id: {id}". Replace `{id}` with the actual id.
+1. Update the **first** endpoint to also allow for a search term using a query parameter e.g. `localhost:8080/products?search=apple`. Return the phrase "You have searched for {searchTerm}". Replace `{searchTerm}` with the actual search term.
+
+> **Hint for task 3:** This is still **one** method handling `/products`, not a second one. Two methods mapped to the same route and method type will cause the application to fail on startup with an ambiguous mapping error. Make the query parameter optional and decide what to return based on whether it was provided.
 
 ---
 
@@ -480,7 +512,7 @@ The Model-View-Controller (MVC) is an architectural pattern that separates an ap
 
 You can read more about MVC [here](https://www.freecodecamp.org/news/model-view-controller-mvc-explained-through-ordering-drinks-at-the-bar-efcba6255053/).
 
-In a typical API-centric application, the view is usually a frontend application (e.g. React, Vue, Angular, etc).
+In a typical API-centric application, the view is usually a frontend application (e.g. React, Vue, Angular, etc). Our Spring Boot backend has no view of its own — it returns data, and the client application decides how to display it.
 
 In our Spring Boot application, the controller is the entry point for all web requests. It is responsible for handling the request and returning the response.
 
@@ -491,6 +523,28 @@ public class SampleController {
 
 }
 ```
+
+Steps:
+
+1. Create `SampleController.java` in the same package as your application class.
+2. Annotate it with `@RestController`.
+3. **Move** all the route methods out of the application class and into `SampleController`. Move them — do not copy them.
+4. **Remove `@RestController` from the application class.** It no longer handles any routes, so it should go back to having a single job: starting the application.
+
+```java
+@SpringBootApplication
+public class SpringDemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringDemoApplication.class, args);
+    }
+
+}
+```
+
+> **Warning:** If the same route ends up in both classes — for example because a method was copied instead of moved — the application will **fail on startup** with an ambiguous mapping error. Spring cannot decide which method should handle the request. Check that each route exists in exactly one place.
+
+Notice that the URLs do not change. Spring finds handler methods in any `@RestController` class within your application's package, so which class a route lives in is a matter of organisation for us, not something Spring cares about.
 
 Test the endpoints again to make sure that they are working.
 
@@ -519,6 +573,8 @@ public String getAppInfo() {
 }
 ```
 
+> **Note:** If a property does not exist in the file and no default is provided, the application will **fail to start** rather than leaving the field null. This is intentional — a missing configuration value is found at startup instead of causing an unexplained failure later.
+
 Default values can be specified using the `:` symbol.
 ```java
 @Value("${spring.application.name:Demo Spring Boot Application}")
@@ -530,16 +586,13 @@ private String port;
 
 Test the endpoint at `localhost:8080/app-info`. Remember to update the port number if you have changed it.
 
+> **Note:** Never put secrets such as database passwords in `application.properties`, because this file is committed to Git. In production these values come from environment variables or a secrets manager. Spring reads environment variables automatically and they override values in this file.
+
 ### Logging
 
-Recall we installed `slf4j` and `logback` in a previous lesson. We can put the log settings in the `application.properties` file.
+Recall we used `slf4j` and `logback` in a previous lesson, where we had to add them as dependencies.
 
-Our `spring-boot-starter` dependency already includes the `logback` library. Thus, we do not need to add the dependency manually.
-
-We can check the dependency tree using the following command:
-```bash
-mvn dependency:tree
-```
+In Spring Boot we do not. The `spring-boot-starter` dependency — which `spring-boot-starter-webmvc` already brings in — includes SLF4J and Logback. There is nothing to add to `pom.xml`; they are already available.
 
 We can configure the logging settings in the `application.properties` file. For more custom configuration settings, we can use the `logback.xml` file instead.
 ```properties
@@ -548,22 +601,32 @@ logging.level.root=INFO
 logging.file.name=logs/application.log
 ```
 
+Logging levels are hierarchical. Setting the level to `INFO` means `INFO`, `WARN` and `ERROR` messages are logged, but `DEBUG` and `TRACE` are not.
+
+You can also set the level for a specific package rather than globally. This is usually what you want, because setting `root` to `DEBUG` produces a very large amount of framework output that buries your own messages.
+```properties
+# Turn up logging for our own code only
+logging.level.sg.edu.ntu=DEBUG
+```
+
 Add the logging code to our entry file to test it.
 ```java
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SpringBootApplication
-public class MySpringbootProjectApplication {
+public class SpringDemoApplication {
 
-    private static final Logger logger = LoggerFactory.getLogger(MySpringbootProjectApplication.class); // Name this according to your class name
+    private static final Logger logger = LoggerFactory.getLogger(SpringDemoApplication.class); // Name this according to your class name
 
     public static void main(String[] args) {
-        logger.info("🟢 Starting MySpringbootProjectApplication");
+        logger.info("🟢 Starting SpringDemoApplication");
         logger.warn("🟠 Test Warning");
         logger.error("🔴 Error Warning");
-        SpringApplication.run(MySpringbootProjectApplication.class, args);
+        SpringApplication.run(SpringDemoApplication.class, args);
     }
+
+}
 ```
 
 ---
@@ -582,6 +645,8 @@ public class SampleItem {
   // Add your getters and setters
 }
 ```
+
+> **Note:** The getters are required. Jackson builds the JSON from the getter methods, so a field without a getter will not appear in the response.
 
 In `SampleController.java`, create a new method that returns a `SampleItem`.
 ```java
@@ -620,13 +685,29 @@ This is how dependency injection works:
 
 1. Annotate the class using `@Component`.
 2. Spring Boot will register this class as bean.
-3. Use `@AutoWired` to inject the bean into the class that depends on it.
+3. Use `@Autowired` to inject the bean into the class that depends on it.
+
+> **Important — this example is for learning the annotations, not a pattern to copy.**
+>
+> Spring beans are **singletons** by default: one instance shared by the whole application, across every request and every thread. Our method calls setters on that shared object, so two users hitting `/item` at the same time would be mutating the same instance and could see each other's data.
+>
+> The rule: a singleton bean should not hold mutable data that belongs to a single request. Beans should hold behaviour (services, repositories) or configuration that does not change.
+>
+> In real code, data objects like `SampleItem` are created per request with `new` inside the method, and what you inject are the classes that *do work*. A useful rule of thumb: **inject the things that do work, create the things that hold data.**
+
+> **Note on injection style:** Field injection (`@Autowired` on a field) is shown here because it is the shortest form. Modern Spring code normally uses **constructor injection** instead — the dependency becomes a constructor parameter and the field can be `final`. This means the object can never exist half-constructed, and the class can be tested with plain `new` without Spring.
 
 ---
 
 # 👨‍💻 Activity (15 mins)
 
-Use what you have learned to create a new Spring Boot project titled `simple-crm`.
+Use what you have learned to create a **new** Spring Boot project titled `simple-crm`, using Spring Initializr exactly as you did earlier for `spring-demo`.
+
+> **⚠️ Important — this project carries forward.** `simple-crm` is the base project we will build on for the rest of the Spring Boot lessons in this module. Every subsequent lesson starts from it.
+>
+> **If you do not finish this in class, it becomes homework.** You must have `simple-crm` created and running with the `/customer` endpoint working **before the next lesson**, otherwise you will not be able to follow along.
+
+Set it up with the same choices as before: Maven project, Java, latest stable Spring Boot version, `groupId` `sg.edu.ntu`, `artifactId` `simple-crm`, `jar` packaging, Java 21. Remember to add the `spring-boot-starter-webmvc` and `spring-boot-devtools` dependencies to `pom.xml`.
 
 Add a Customer POJO class with the following properties:
 ```java
@@ -639,15 +720,23 @@ private String jobTitle;
 private int yearOfBirth;
 ```
 
+Remember to add getters and setters — Jackson needs the getters to produce the JSON.
+
 Use the `@Component` annotation to tell Spring Boot that this class is a component that can be injected into other classes.
 
 Create a controller file `CustomerController.java`. Inject the customer bean into the controller using the `@Autowired` annotation.
 
 Create a new endpoint `/customer` that returns a Customer object with some preset values.
 
+Test it at `localhost:8080/customer`. You should see the Customer returned as JSON.
+
+> **Tip:** Stop `spring-demo` before running `simple-crm`, or change the port in `application.properties`. Two applications cannot use port 8080 at the same time — the second one will fail to start with a "port already in use" error.
+
 ---
 
 ## Part 9: Dev vs Prod Environment (Optional)
+
+> This section is optional and is provided for self-study.
 
 A common and simple way to manage different environments is by using **profile-specific properties files**.
 
